@@ -1,6 +1,8 @@
 import random
+
 import numpy as np
-from qlearning import QLearningAgent, State, Action
+
+from qlearning import Action, QLearningAgent, State
 
 
 class QLearningAgentEpsScheduling(QLearningAgent):
@@ -43,6 +45,21 @@ class QLearningAgentEpsScheduling(QLearningAgent):
         action = self.legal_actions[0]
 
         # BEGIN SOLUTION
+        if self.epsilon_decay_steps <= 0:
+            frac = 1.0
+        else:
+            frac = min(1.0, float(self.timestep) / float(self.epsilon_decay_steps))
+
+        self.epsilon = float(
+            self.epsilon_start + frac * (self.epsilon_end - self.epsilon_start)
+        )
+
+        if random.random() < self.epsilon:
+            action = random.choice(self.legal_actions)
+        else:
+            action = self.get_best_action(state)
+
+        self.timestep += 1
         # END SOLUTION
 
         return action

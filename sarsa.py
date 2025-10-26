@@ -1,9 +1,9 @@
-from collections import defaultdict
 import random
 import typing as t
-import numpy as np
-import gymnasium as gym
+from collections import defaultdict
 
+import gymnasium as gym
+import numpy as np
 
 Action = int
 State = int
@@ -11,12 +11,13 @@ Info = t.TypedDict("Info", {"prob": float, "action_mask": np.ndarray})
 QValues = t.DefaultDict[int, t.DefaultDict[Action, float]]
 
 
-class SarsaAgent:
+class SARSAAgent:
     def __init__(
         self,
         learning_rate: float,
         gamma: float,
         legal_actions: t.List[Action],
+        epsilon: float = 0.25,
     ):
         """
         SARSA  Agent
@@ -27,6 +28,7 @@ class SarsaAgent:
         self._qvalues: QValues = defaultdict(lambda: defaultdict(int))
         self.learning_rate = learning_rate
         self.gamma = gamma
+        self.epsilon = epsilon
 
     def get_qvalue(self, state: State, action: Action) -> float:
         """
@@ -47,6 +49,11 @@ class SarsaAgent:
         """
         value = 0.0
         # BEGIN SOLUTION
+        possible_q_values = [
+            self.get_qvalue(state, action) for action in self.legal_actions
+        ]
+        if possible_q_values:
+            value = max(possible_q_values)
         # END SOLUTION
         return value
 
@@ -61,7 +68,12 @@ class SarsaAgent:
         """
         q_value = 0.0
         # BEGIN SOLUTION
-        # END SOLUTION
+        q_old = self.get_qvalue(state, action)
+        q_next = self.get_qvalue(next_state, self.get_action(next_state))
+        td_target = float(reward) + self.gamma * q_next
+        td_error = td_target - q_old
+        q_value = q_old + self.learning_rate * td_error
+        # END SOLUTIOH
 
         self.set_qvalue(state, action, q_value)
 
@@ -72,17 +84,17 @@ class SarsaAgent:
         possible_q_values = [
             self.get_qvalue(state, action) for action in self.legal_actions
         ]
-        index = np.argmax(possible_q_values)
-        best_action = self.legal_actions[index]
-        return best_action
+        i = np.argmax(possible_q_values)
+        best = self.legal_actions[i]
+        return best
 
     def get_action(self, state: State) -> Action:
         """
         Compute the action to take in the current state, including exploration.
         """
-        action = self.legal_actions[0]
-
         # BEGIN SOLUTION
+        if random.random() < self.epsilon:
+            return random.choice(self.legal_actions)
+        else:
+            return self.get_best_action(state)
         # END SOLUTION
-
-        return action

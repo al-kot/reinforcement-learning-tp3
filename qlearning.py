@@ -47,10 +47,12 @@ class QLearningAgent:
         Compute your agent's estimate of V(s) using current q-values
         V(s) = max_a Q(s, a) over possible actions.
         """
-        value = 0.0
         # BEGIN SOLUTION
+        values = [self.get_qvalue(state, a) for a in self.legal_actions]
+        if len(values) == 0:
+            return 0.0
+        return float(np.max(values))
         # END SOLUTION
-        return value
 
     def update(
         self, state: State, action: Action, reward: t.SupportsFloat, next_state: State
@@ -64,6 +66,10 @@ class QLearningAgent:
         """
         q_value = 0.0
         # BEGIN SOLUTION
+        q_old = self.get_qvalue(state, action)
+        td_target = float(reward) + self.gamma * self.get_value(next_state)
+        td_error = td_target - q_old
+        q_value = q_old + self.learning_rate * td_error
         # END SOLUTION
 
         self.set_qvalue(state, action, q_value)
@@ -75,9 +81,8 @@ class QLearningAgent:
         possible_q_values = [
             self.get_qvalue(state, action) for action in self.legal_actions
         ]
-        index = np.argmax(possible_q_values)
-        best_action = self.legal_actions[index]
-        return best_action
+        i = np.argmax(possible_q_values)
+        return self.legal_actions[i]
 
     def get_action(self, state: State) -> Action:
         """
@@ -87,9 +92,9 @@ class QLearningAgent:
               To pick True or False with a given probablity, generate uniform number in [0, 1]
               and compare it with your probability
         """
-        action = self.legal_actions[0]
-
         # BEGIN SOLUTION
+        if random.random() < self.epsilon:
+            return random.choice(self.legal_actions)
+        else:
+            return self.get_best_action(state)
         # END SOLUTION
-
-        return action
